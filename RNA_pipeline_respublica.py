@@ -142,17 +142,11 @@ rule PrintReads_BQSR:
 	threads: 12
 	shell: "{PrintReads_BQSR} -R {ref_genome} -I {input.IndelRealigner_output} -BQSR {input.BaseRecalibrator_output} -o {output}"
 
-#rule UnifiedGenotyper:
-#	input: PrintReads_BQSR_output = output_dir + "SRR{tag, +d}PrintReads_BQSR_output.bam"
-#	output: output_dir + "SRR{tag, +d}UnifiedGenotyper_output.vcf"
-#	threads: 12
-#	shell: "{UnifiedGenotyper} -R {ref_genome} -I {input.PrintReads_BQSR_output} -o {output} --output_mode EMIT_ALL_SITES -drf DuplicateRead -mbq 20"
-
 rule HaplotypeCaller:
-	input: PrintReads_BQSR_output = output_dir + "SRR{tag, +d}PrintReads_BQSR_output.bam"#, UnifiedGenotyper_output = output_dir + "SRR{tag, +d}UnifiedGenotyper_output.vcf"
+	input: PrintReads_BQSR_output = output_dir + "SRR{tag, +d}PrintReads_BQSR_output.bam"
 	output: output_dir + "SRR{tag, +d}HaplotypeCaller_output.vcf"
 	threads: 12
-	shell: "{HaplotypeCaller}"
+	shell: "{HaplotypeCaller} -R {ref_genome} -I {input} --dbsnp vcf/00-All.vcf -stand_call_conf 20 -stand_emit_conf 20 -drf DuplicateRead -rf ReassignOneMappingQuality --reassign_mapping_quality_from 255 --reassign_mapping_quality_to 60 -o {output}"
 #rule giremi:
 #	input: PrintReads_BQSR_output = output_dir + "SRR{tag, +d}PrintReads_BQSR_output.bam", UnifiedGenotyper_output = output_dir + "SRR{tag, +d}UnifiedGenotyper_output.vcf"
 #	output: output_dir + "SRR{tag, +d}giremi_output.res"
