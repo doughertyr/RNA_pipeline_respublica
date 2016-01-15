@@ -143,12 +143,13 @@ rule PrintReads_BQSR:
 	shell: "{PrintReads_BQSR} -R {ref_genome} -I {input.IndelRealigner_output} -BQSR {input.BaseRecalibrator_output} -o {output}"
 
 rule HaplotypeCaller:
-	input: PrintReads_BQSR_output = output_dir + "SRR{tag, +d}PrintReads_BQSR_output.bam"
-	output: output_dir + "SRR{tag, +d}HaplotypeCaller_output.vcf"
+	input: PrintReads_BQSR_output = output_dir + "SRR{tag, \d+}PrintReads_BQSR_output.bam"
+	output: output_dir + "SRR{tag, \d+}HaplotypeCaller_output.vcf"
 	threads: 12
 	shell: "{HaplotypeCaller} -R {ref_genome} -I {input} --dbsnp vcf/00-All.vcf -stand_call_conf 20 -stand_emit_conf 20 -drf DuplicateRead -rf ReassignOneMappingQuality --reassign_mapping_quality_from 255 --reassign_mapping_quality_to 60 -o {output}"
+
 #rule giremi:
-#	input: PrintReads_BQSR_output = output_dir + "SRR{tag, +d}PrintReads_BQSR_output.bam", UnifiedGenotyper_output = output_dir + "SRR{tag, +d}UnifiedGenotyper_output.vcf"
+#	input: PrintReads_BQSR_output = output_dir + "SRR{tag, +d}PrintReads_BQSR_output.bam", HaplotypeCaller_output = output_dir + "SRR{tag, +d}HaplotypeCaller_output.vcf"
 #	output: output_dir + "SRR{tag, +d}giremi_output.res"
 #	threads: 12
-#	shell: "LD_LIBRARY_PATH=mnt/isilon/cbmi/variome/Taylor/giremi/htslib/; export LD_LIBRARY_PATH; {giremi} -f {ref_genome} -l {input.UnifiedGenotyper_output} -o {output} {input.PrintReads_BQSR_output}"
+#	shell: "LD_LIBRARY_PATH=mnt/isilon/cbmi/variome/Taylor/giremi/htslib/; export LD_LIBRARY_PATH; {giremi} -f {ref_genome} -l {input.HaplotypeCaller_output} -o {output}"
