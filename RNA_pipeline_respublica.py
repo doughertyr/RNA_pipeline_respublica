@@ -12,15 +12,16 @@ output_dir = respublica_path + "rnaedit_tmp/"
 data_dir = respublica_path + "fastq/"
 genomeDir = respublica_path + "genomeDir/"
 STAR_output_dir = respublica_path + "STARsnakeOutput/"
-GATK = "java -jar /mnt/isilon/cbmi/variome/bin/GATK/3.4-46/GenomeAnalysisTK.jar"
+GATK = "/mnt/isilon/cbmi/variome/bin/java -jar /mnt/isilon/cbmi/variome/bin/GATK/3.4-46/GenomeAnalysisTK.jar"
+dbsnp = "/mnt/isilon/cbmi/variome/Taylor/rnaedit/vcf/00-All.vcf"
 
 ### TOOLS ###
 STAR = "/mnt/isilon/cbmi/variome/rnaseq_workspace/tools/STAR-STAR_2.4.1c/bin/Linux_x86_64_static/STAR"
 samtools = "/mnt/isilon/cbmi/variome/bin/samtools"
-CreateSequenceDictionary = "java -jar /mnt/isilon/cbmi/variome/bin/CreateSequenceDictionary.jar"
-AddOrReplaceReadGroups = "java -jar /mnt/isilon/cbmi/variome/bin/AddOrReplaceReadGroups.jar"
-GATK = "java -jar /mnt/isilon/cbmi/variome/bin/GATK/3.4-46/GenomeAnalysisTK.jar"
-ReorderSam = "java -jar /mnt/isilon/cbmi/variome/bin/ReorderSam.jar"
+CreateSequenceDictionary = "/mnt/isilon/cbmi/variome/bin/java -jar /mnt/isilon/cbmi/variome/bin/CreateSequenceDictionary.jar"
+AddOrReplaceReadGroups = "/mnt/isilon/cbmi/variome/bin/java -jar /mnt/isilon/cbmi/variome/bin/AddOrReplaceReadGroups.jar"
+GATK = "/mnt/isilon/cbmi/variome/bin/java -jar /mnt/isilon/cbmi/variome/bin/GATK/3.4-46/GenomeAnalysisTK.jar"
+ReorderSam = "/mnt/isilon/cbmi/variome/bin/java -jar /mnt/isilon/cbmi/variome/bin/ReorderSam.jar"
 samtools = "/mnt/isilon/cbmi/variome/bin/samtools"
 samtools_index = samtools + " index"
 RealignerTargetCreator = GATK + " -T RealignerTargetCreator"
@@ -134,7 +135,7 @@ rule BaseRecalibrator:
 	input: IndelRealigner_output = output_dir + "SRR{tag, \d+}IndelRealigner_output.bam"	
 	output: output_dir + "SRR{tag, \d+}BaseRecalibrator_output.table"
 	threads: 12
-	shell: "{BaseRecalibrator} -R {ref_genome} -I {input.IndelRealigner_output} -knownSites vcf/00-All.vcf -o {output}"
+	shell: "{BaseRecalibrator} -R {ref_genome} -I {input.IndelRealigner_output} -knownSites {dbsnp} -o {output}"
 
 rule PrintReads_BQSR:
 	input: BaseRecalibrator_output = output_dir + "SRR{tag, \d+}BaseRecalibrator_output.table", IndelRealigner_output = output_dir + "SRR{tag, \d+}IndelRealigner_output.bam"
@@ -146,7 +147,7 @@ rule HaplotypeCaller:
 	input: PrintReads_BQSR_output = output_dir + "SRR{tag, \d+}PrintReads_BQSR_output.bam"
 	output: output_dir + "SRR{tag, \d+}HaplotypeCaller_output.vcf"
 	threads: 12
-	shell: "{HaplotypeCaller} -R {ref_genome} -I {input} --dbsnp vcf/00-All.vcf -stand_call_conf 20 -stand_emit_conf 20 -drf DuplicateRead -rf ReassignOneMappingQuality --reassign_mapping_quality_from 255 --reassign_mapping_quality_to 60 -o {output}"
+	shell: "{HaplotypeCaller} -R {ref_genome} -I {input} --dbsnp {dbsnp} -stand_call_conf 20 -stand_emit_conf 20 -drf DuplicateRead -rf ReassignOneMappingQuality --reassign_mapping_quality_from 255 --reassign_mapping_quality_to 60 -o {output}"
 
 #rule giremi:
 #	input: PrintReads_BQSR_output = output_dir + "SRR{tag, +d}PrintReads_BQSR_output.bam", HaplotypeCaller_output = output_dir + "SRR{tag, +d}HaplotypeCaller_output.vcf"
