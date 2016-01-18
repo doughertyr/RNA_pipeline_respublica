@@ -5,22 +5,23 @@ import os
 
 
 ### PATHS ### 
-ref_genome_dir = "mnt/isilon/cbmi/variome/rnaseq_workspace/refs/hg19/fasta/"
+respublica_path = "/mnt/isilon/cbmi/variome/Taylor/rnaedit/"
+ref_genome_dir = "/mnt/isilon/cbmi/variome/rnaseq_workspace/refs/hg19/fasta/"
 ref_genome = ref_genome_dir + "hg19.fa"
-output_dir = "rnaedit_tmp/"
-data_dir = "fastq/"
-genomeDir = "genomeDir/"
-STAR_output_dir = "STARsnakeOutput/"
-GATK = "java -jar mnt/isilon/cbmi/variome/bin/GATK/3.4-46/GenomeAnalysisTK.jar"
+output_dir = respublica_path + "rnaedit_tmp/"
+data_dir = respublica_path + "fastq/"
+genomeDir = respublica_path + "genomeDir/"
+STAR_output_dir = respublica_path + "STARsnakeOutput/"
+GATK = "java -jar /mnt/isilon/cbmi/variome/bin/GATK/3.4-46/GenomeAnalysisTK.jar"
 
 ### TOOLS ###
-STAR = "mnt/isilon/cbmi/variome/rnaseq_workspace/tools/STAR-STAR_2.4.1c/bin/Linux_x86_64_static/STAR"
-samtools = "mnt/isilon/cbmi/variome/bin/samtools"
-CreateSequenceDictionary = "java -jar mnt/isilon/cbmi/variome/bin/CreateSequenceDictionary.jar"
-AddOrReplaceReadGroups = "java -jar mnt/isilon/cbmi/variome/bin/AddOrReplaceReadGroups.jar"
-GATK = "java -jar mnt/isilon/cbmi/variome/bin/GATK/3.4-46/GenomeAnalysisTK.jar"
-ReorderSam = "java -jar mnt/isilon/cbmi/variome/bin/ReorderSam.jar"
-samtools = "mnt/isilon/cbmi/variome/bin/samtools"
+STAR = "/mnt/isilon/cbmi/variome/rnaseq_workspace/tools/STAR-STAR_2.4.1c/bin/Linux_x86_64_static/STAR"
+samtools = "/mnt/isilon/cbmi/variome/bin/samtools"
+CreateSequenceDictionary = "java -jar /mnt/isilon/cbmi/variome/bin/CreateSequenceDictionary.jar"
+AddOrReplaceReadGroups = "java -jar /mnt/isilon/cbmi/variome/bin/AddOrReplaceReadGroups.jar"
+GATK = "java -jar /mnt/isilon/cbmi/variome/bin/GATK/3.4-46/GenomeAnalysisTK.jar"
+ReorderSam = "java -jar /mnt/isilon/cbmi/variome/bin/ReorderSam.jar"
+samtools = "/mnt/isilon/cbmi/variome/bin/samtools"
 samtools_index = samtools + " index"
 RealignerTargetCreator = GATK + " -T RealignerTargetCreator"
 IndelRealigner = GATK + " -T IndelRealigner"
@@ -28,7 +29,7 @@ BaseRecalibrator = GATK + " -T BaseRecalibrator"
 PrintReads_BQSR = GATK + " -T PrintReads"
 UnifiedGenotyper = GATK + " -T UnifiedGenotyper"
 HaplotypeCaller = GATK + " -T HaplotypeCaller"
-giremi = "mnt/isilon/cbmi/variome/Taylor/giremi/giremi"
+giremi = "/mnt/isilon/cbmi/variome/Taylor/giremi/giremi"
 
 ### CHECKPOINT FILES ###
 chrName = genomeDir + "chrName.txt" #Created after STAR_index step
@@ -44,8 +45,7 @@ RealignerTargetCreator_output = ["{}{}RealignerTargetCreator_output.intervals".f
 IndelRealigner_output = ["{}{}IndelRealigner_output.bam".format(output_dir,i) for i in samples]
 BaseRecalibrator_output = ["{}{}BaseRecalibrator_output.table".format(output_dir,i) for i in samples]
 PrintReads_BQSR_output = ["{}{}PrintReads_BQSR_output.bam".format(output_dir,i) for i in samples]
-UnifiedGenotyper_output = ["{}{}UnifiedGenotyper_output.vcf".format(output_dir,i) for i in samples]
-HaplotypeCaller_output = ["{}{}HaplotyperCaller_output.vcf".format(output_dir,i) for i in samples]
+HaplotypeCaller_output = ["{}{}HaplotypeCaller_output.vcf".format(output_dir,i) for i in samples]
 giremi_output = ["{}{}giremi_output.res".format(output_dir,i) for i in samples]
 
 ref_genome_fai = ref_genome + ".fai"
@@ -56,7 +56,7 @@ ref_genome_dict = ref_genome_dir + "hg19.dict"
 
 
 rule all:	
-    input: genomeDir, chrName, STAR_output_dir, ref_genome_fai, ref_genome_dict, AddOrReplaceReadGroups_output, samtools_index_1_output, ReorderSam_output, RealignerTargetCreator_output, IndelRealigner_output, BaseRecalibrator_output, PrintReads_BQSR_output, UnifiedGenotyper_output, HaplotypeCaller_output#, giremi_output
+    input: genomeDir, chrName, STAR_output_dir, ref_genome_fai, ref_genome_dict, AddOrReplaceReadGroups_output, samtools_index_1_output, ReorderSam_output, RealignerTargetCreator_output, IndelRealigner_output, BaseRecalibrator_output, PrintReads_BQSR_output,HaplotypeCaller_output#, giremi_output
 
 rule clean:
     shell: "rm -rf {STAR_output_dir}"
@@ -83,7 +83,7 @@ rule STAR_mapping:
     output: "STARsnakeOutput/SRR{tag, \d+}STAR_output.bam"
     threads: 12
     shell:
-        "{STAR} --runThreadN 12 --genomeDir {genomeDir} --readFilesIn {input} --sjdbGTFfile mnt/isilon/cbmi/variome/rnaseq_workspace/refs/hg19/ncbi.gff --twopassMode Basic --outFileNamePrefix STARsnakeOutput/{wildcards.tag} --outSAMtype BAM SortedByCoordinate"
+        "{STAR} --runThreadN 12 --genomeDir {genomeDir} --readFilesIn {input} --sjdbGTFfile /mnt/isilon/cbmi/variome/rnaseq_workspace/refs/hg19/ncbi.gff --twopassMode Basic --outFileNamePrefix STARsnakeOutput/{wildcards.tag} --outSAMtype BAM SortedByCoordinate"
 
 rule make_ref_genome_fai: 
 	output: ref_genome_fai
@@ -152,4 +152,4 @@ rule HaplotypeCaller:
 #	input: PrintReads_BQSR_output = output_dir + "SRR{tag, +d}PrintReads_BQSR_output.bam", HaplotypeCaller_output = output_dir + "SRR{tag, +d}HaplotypeCaller_output.vcf"
 #	output: output_dir + "SRR{tag, +d}giremi_output.res"
 #	threads: 12
-#	shell: "LD_LIBRARY_PATH=mnt/isilon/cbmi/variome/Taylor/giremi/htslib/; export LD_LIBRARY_PATH; {giremi} -f {ref_genome} -l {input.HaplotypeCaller_output} -o {output}"
+#	shell: "LD_LIBRARY_PATH=/mnt/isilon/cbmi/variome/Taylor/giremi/htslib/; export LD_LIBRARY_PATH; {giremi} -f {ref_genome} -l {input.HaplotypeCaller_output} -o {output}"
