@@ -146,7 +146,6 @@ rule PrintReads_BQSR:
 rule HaplotypeCaller:
 	input: PrintReads_BQSR_output = output_dir + "SRR{tag, \d+}PrintReads_BQSR_output.bam"
 	output: output_dir + "SRR{tag, \d+}HaplotypeCaller_output.vcf"
-	threads: 12
 	shell: "{HaplotypeCaller} -R {ref_genome} -I {input} --dbsnp {dbsnp} -stand_call_conf 20 -stand_emit_conf 20 -drf DuplicateRead -rf ReassignOneMappingQuality --reassign_mapping_quality_from 255 --reassign_mapping_quality_to 60 -o {output} -mmq 20"
 
 #rule giremi:
