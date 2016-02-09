@@ -13,7 +13,8 @@ data_dir = respublica_path + "fastq/"
 genomeDir = respublica_path + "genomeDir/"
 STAR_output_dir = respublica_path + "STARsnakeOutput/"
 GATK = "/mnt/isilon/cbmi/variome/bin/java -jar /mnt/isilon/cbmi/variome/bin/GATK/3.4-46/GenomeAnalysisTK.jar"
-dbsnp = "/mnt/isilon/cbmi/variome/Taylor/rnaedit/vcf/00-All.vcf"
+dbsnp = respublica_path + "vcf/00-All.vcf"
+ref_gene = "ucsc_hg19.txt"
 
 ### TOOLS ###
 STAR = "/mnt/isilon/cbmi/variome/rnaseq_workspace/tools/STAR-STAR_2.4.1c/bin/Linux_x86_64_static/STAR"
@@ -47,17 +48,18 @@ IndelRealigner_output = ["{}{}IndelRealigner_output.bam".format(output_dir,i) fo
 BaseRecalibrator_output = ["{}{}BaseRecalibrator_output.table".format(output_dir,i) for i in samples]
 PrintReads_BQSR_output = ["{}{}PrintReads_BQSR_output.bam".format(output_dir,i) for i in samples]
 HaplotypeCaller_output = ["{}{}HaplotypeCaller_output.vcf".format(output_dir,i) for i in samples]
+AnnotateSNVs_output = ["{}AnnotateSNVs_output.txt".format(i) for i in samples]
 giremi_output = ["{}{}giremi_output.res".format(output_dir,i) for i in samples]
 
 ref_genome_fai = ref_genome + ".fai"
 ref_genome_dict = ref_genome_dir + "hg19.dict"
-
+ref_gene_uniq = "ucsc_hg19_uniq.txt"
 
 ### RULES ###
 
 
 rule all:	
-    input: genomeDir, chrName, STAR_output_dir, ref_genome_fai, ref_genome_dict, AddOrReplaceReadGroups_output, samtools_index_1_output, ReorderSam_output, RealignerTargetCreator_output, IndelRealigner_output, BaseRecalibrator_output, PrintReads_BQSR_output,HaplotypeCaller_output#, giremi_output
+    input: genomeDir, chrName, STAR_output_dir, ref_genome_fai, ref_genome_dict, AddOrReplaceReadGroups_output, samtools_index_1_output, ReorderSam_output, RealignerTargetCreator_output, IndelRealigner_output, BaseRecalibrator_output, PrintReads_BQSR_output,HaplotypeCaller_output, ref_gene_uniq, AnnotateSNVs_output#, giremi_output
 
 rule clean:
     shell: "rm -rf {STAR_output_dir}"
@@ -147,6 +149,16 @@ rule HaplotypeCaller:
 	input: PrintReads_BQSR_output = output_dir + "SRR{tag, \d+}PrintReads_BQSR_output.bam"
 	output: output_dir + "SRR{tag, \d+}HaplotypeCaller_output.vcf"
 	shell: "{HaplotypeCaller} -R {ref_genome} -I {input} --dbsnp {dbsnp} -stand_call_conf 20 -stand_emit_conf 20 -drf DuplicateRead -rf ReassignOneMappingQuality --reassign_mapping_quality_from 255 --reassign_mapping_quality_to 60 -o {output} -mmq 20"
+
+rule UniqGenes:
+	input: {ref_gene}
+	output: {ref_gene_uniq}
+	script: "genename_uniquey.py"
+
+rule AnnotateSNVs:
+	input: HaplotypeCaller_output = output_dir + "SRR{tag, \d+}HaplotypeCaller_output.vcf", UniqGenes_output = {ref_gene_uniq}
+	output: "SRR{tag, \d+}AnnotateSNVs_output.txt"
+	shell: "python annotate_snvs.py {input.HaplotypeCaller_output}"
 
 #rule giremi:
 #	input: PrintReads_BQSR_output = output_dir + "SRR{tag, +d}PrintReads_BQSR_output.bam", HaplotypeCaller_output = output_dir + "SRR{tag, +d}HaplotypeCaller_output.vcf"
