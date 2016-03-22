@@ -12,7 +12,7 @@ output_dir = respublica_path + "rnaedit_tmp/"
 data_dir = respublica_path + "fastq/"
 genomeDir = respublica_path + "genomeDir/"
 STAR_output_dir = respublica_path + "STARsnakeOutput/"
-GATK = "/mnt/isilon/cbmi/variome/bin/java -D java.io.tmpdir=/mnt/isilon/cbmi/variome/gatk_tmp -jar /mnt/isilon/cbmi/variome/bin/GATK/3.4-46/GenomeAnalysisTK.jar"
+GATK = "/mnt/isilon/cbmi/variome/bin/java -Djava.io.tmpdir=/mnt/isilon/cbmi/variome/gatk_tmp -jar /mnt/isilon/cbmi/variome/bin/GATK/3.4-46/GenomeAnalysisTK.jar"
 dbsnp = respublica_path + "vcf/00-All.vcf"
 ref_gene = "ucsc_hg19.txt"
 htslib_path = "/mnt/isilon/cbmi/variome/Taylor/htslib"
@@ -124,7 +124,7 @@ rule samtools_index_2:
 rule SplitNCigarReads:
 	input: ReorderSam_output = output_dir + "SRR{tag, \d+}ReorderSam_output.bam", samtools_index_2_output = output_dir + "SRR{tag, \d+}ReorderSam_output.bam.bai"
 	output: output_dir + "SRR{tag, \d+}SplitNCigarReads_output.bam"
-	shell: "{SplitNCigarReads} -R {ref_genome} -I {input.ReorderSam_output} --filter_reads_with_N_cigar -o {output}"
+	shell: "{SplitNCigarReads} -R {ref_genome} -I {input.ReorderSam_output} -rf ReassignOneMappingQuality -RMQF 255 -RMQT 60 -U ALLOW_N_CIGAR_READS  -o {output}"
 
 #rule IndelRealigner:
 #	input: RealignerTargetCreator_output = output_dir + "SRR{tag, \d+}RealignerTargetCreator_output.intervals", ReorderSam_output = output_dir + "SRR{tag, \d+}ReorderSam_output.bam"
